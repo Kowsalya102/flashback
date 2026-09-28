@@ -54,7 +54,7 @@ export const ChatMessageList: React.FC<Props> = ({
   };
 
   return (
-    <div className="space-y-6 max-w-[760px] mx-auto w-full font-sans text-sm text-gray-200 py-4">
+    <div className="space-y-6 max-w-[760px] mx-auto w-full font-sans text-sm text-gray-200 pt-4 pb-8">
       {messages.map((msg, idx) => {
         const isUser = msg.role === "user";
         const isLastAssistant = !isUser && idx === messages.length - 1;

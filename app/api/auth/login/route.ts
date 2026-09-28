@@ -20,6 +20,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
     }
 
+    if (user.emailVerified === false) {
+      return NextResponse.json(
+        { error: "Email verification required. Please verify your email before logging in." },
+        { status: 403 }
+      );
+    }
+
     const res = NextResponse.json({
       message: "Logged in successfully.",
       user: {

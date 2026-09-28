@@ -1,17 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Logo } from "@/components/Logo";
 import { ArrowRight, Lock, Mail, AlertTriangle, Github } from "lucide-react";
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (searchParams) {
+      const urlError = searchParams.get("error");
+      if (urlError) {
+        setError(urlError);
+      }
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,19 +121,34 @@ export default function LoginPage() {
 
         <div className="grid grid-cols-2 gap-3">
           <button
+            type="button"
+            onClick={() => (window.location.href = "/api/auth/google")}
+            className="py-2.5 px-3 rounded-xl bg-surface border border-surface-border text-xs text-gray-300 hover:text-white hover:bg-surface-hover flex items-center justify-center gap-2 font-mono"
+          >
+            <span>🌐 Google OAuth</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => (window.location.href = "/api/auth/github")}
+            className="py-2.5 px-3 rounded-xl bg-surface border border-surface-border text-xs text-gray-300 hover:text-white hover:bg-surface-hover flex items-center justify-center gap-2"
+          >
+            <Github className="w-4 h-4" /> GitHub OAuth
+          </button>
+        </div>
+
+        <div className="flex justify-between items-center text-xs text-gray-400 pt-2 border-t border-surface-border">
+          <Link href="/app?mode=guest" className="text-brand-cyan hover:underline font-mono">
+            ⚡ Try without an account
+          </Link>
+          <button
+            type="button"
             onClick={() => {
               setEmail("engineer@demo.internal");
               setPassword("demo123456");
             }}
-            className="py-2.5 px-3 rounded-xl bg-surface border border-surface-border text-xs text-gray-300 hover:text-white hover:bg-surface-hover flex items-center justify-center gap-2 font-mono"
+            className="text-gray-400 hover:text-white underline font-mono text-[11px]"
           >
-            ⚡ Quick Demo Fill
-          </button>
-          <button
-            type="button"
-            className="py-2.5 px-3 rounded-xl bg-surface border border-surface-border text-xs text-gray-300 hover:text-white hover:bg-surface-hover flex items-center justify-center gap-2"
-          >
-            <Github className="w-4 h-4" /> GitHub OAuth
+            Quick Demo Fill
           </button>
         </div>
 
@@ -135,5 +160,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-[80vh] flex items-center justify-center text-xs font-mono text-brand-cyan">Loading login...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }

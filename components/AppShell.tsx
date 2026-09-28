@@ -225,9 +225,9 @@ function AppShellContent({ initialConvId }: Props) {
           sidebarOpen ? "w-64" : "w-14"
         } transition-all duration-300 bg-[#0F0F17] border-r border-[#232332] flex flex-col justify-between overflow-hidden shrink-0 z-30`}
       >
-        <div className="p-3 space-y-3">
+        <div className="p-3 space-y-3 flex-1 min-h-0 flex flex-col">
           {/* Header & Logo */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between shrink-0">
             <Link href="/" className="flex items-center gap-2">
               <Logo size={28} showWordmark={sidebarOpen} />
             </Link>
@@ -242,7 +242,7 @@ function AppShellContent({ initialConvId }: Props) {
           {/* New Chat Button */}
           <button
             onClick={handleNewChat}
-            className={`w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#06B6D4] text-white text-xs font-bold shadow-glow-indigo flex items-center justify-center gap-2 transition-all ${
+            className={`w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#06B6D4] text-white text-xs font-bold shadow-glow-indigo flex items-center justify-center gap-2 transition-all shrink-0 ${
               !sidebarOpen && "px-0"
             }`}
           >
@@ -254,7 +254,7 @@ function AppShellContent({ initialConvId }: Props) {
           {sidebarOpen && (
             <button
               onClick={() => setPaletteOpen(true)}
-              className="w-full py-1.5 px-3 rounded-xl bg-[#181824] border border-[#232332] text-xs font-mono text-gray-400 flex items-center justify-between hover:text-white"
+              className="w-full py-1.5 px-3 rounded-xl bg-[#181824] border border-[#232332] text-xs font-mono text-gray-400 flex items-center justify-between hover:text-white shrink-0"
             >
               <span className="flex items-center gap-2">
                 <Search className="w-3.5 h-3.5 text-[#06B6D4]" /> Search chats...
@@ -265,7 +265,7 @@ function AppShellContent({ initialConvId }: Props) {
 
           {/* Conversations List */}
           {sidebarOpen && (
-            <div className="space-y-1 max-h-[calc(100vh-260px)] overflow-y-auto pr-1">
+            <div className="space-y-1 flex-1 min-h-0 overflow-y-auto pr-1">
               <div className="text-[10px] font-mono uppercase text-gray-500 px-2 py-1 font-bold">
                 Recents
               </div>
@@ -295,7 +295,7 @@ function AppShellContent({ initialConvId }: Props) {
 
         {/* Bottom Account Block */}
         {sidebarOpen && (
-          <div className="p-3 border-t border-[#232332] bg-[#0B0B12] flex items-center justify-between text-xs font-mono">
+          <div className="p-3 border-t border-[#232332] bg-[#0B0B12] flex items-center justify-between text-xs font-mono shrink-0">
             <div className="flex items-center gap-2 truncate">
               <div className="w-7 h-7 rounded-full bg-gradient-to-r from-[#6366F1] to-[#06B6D4] flex items-center justify-center font-bold text-white text-[11px]">
                 {user?.name ? user.name[0].toUpperCase() : "G"}
@@ -313,7 +313,7 @@ function AppShellContent({ initialConvId }: Props) {
       </aside>
 
       {/* 2. MAIN AREA */}
-      <div className="flex-1 flex flex-col justify-between h-full relative overflow-hidden bg-[#09090D]">
+      <div className="flex-1 flex flex-col justify-between h-full min-w-0 min-h-0 relative overflow-hidden bg-[#09090D]">
         {/* Slim Top Bar */}
         <AppTopBar
           title={currentConv?.title || "New Debug Session"}
@@ -325,7 +325,7 @@ function AppShellContent({ initialConvId }: Props) {
         />
 
         {/* Messages List Area */}
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6">
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6">
           {messages.length === 0 ? (
             /* EMPTY STATE: Greeting & Suggested Prompts */
             <div className="h-full flex flex-col items-center justify-center text-center space-y-6 max-w-xl mx-auto py-12">

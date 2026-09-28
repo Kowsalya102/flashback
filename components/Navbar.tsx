@@ -14,6 +14,10 @@ export const Navbar: React.FC = () => {
   const pathname = usePathname();
   const router = useRouter();
 
+  if (pathname?.startsWith("/app") || pathname?.startsWith("/chat")) {
+    return null;
+  }
+
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
