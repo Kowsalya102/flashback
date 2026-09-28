@@ -1,0 +1,44 @@
+{
+  "users": [
+    {
+      "id": "usr_b546b7b343dcd4ec",
+      "email": "kowsalyaramesh1002@gmail.com",
+      "name": "Kowsalya",
+      "passwordHash": "c02df7f9423c8ca514e38e39c934a37805a63d07977efb8d5da95ead6a8630a4",
+      "emailVerified": true,
+      "hindsightBankId": "bank_e661a4f945b0ca4c",
+      "memoryEnabled": true,
+      "userProfile": {
+        "boards": [
+          "Custom PCB",
+          "STM32F4 Discovery",
+          "ESP32-S3 DevKit"
+        ],
+        "mcus": [
+          "STM32F4",
+          "ESP32-S3",
+          "nRF52840"
+        ],
+        "tools": [
+          "Logic Analyzer",
+          "Oscilloscope",
+          "VS Code",
+          "GDB"
+        ],
+        "languages": [
+          "C",
+          "C++",
+          "Python",
+          "TypeScript"
+        ],
+        "os": "Linux / macOS",
+        "skillLevel": "Senior"
+      },
+      "createdAt": "2026-09-28T06:52:22.780Z"
+    }
+  ],
+  "conversations": [],
+  "messages": [],
+  "memoryEvents": [],
+  "usageLimits": []
+}
