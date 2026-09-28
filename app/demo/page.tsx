@@ -14,15 +14,16 @@ import {
   RefreshCw,
   Terminal,
   ShieldAlert,
-  UserCheck,
   FileCode,
-  Tag,
-  Zap
+  Wrench,
+  HardDrive,
+  Code2
 } from "lucide-react";
 
 export default function DemoPage() {
   const [query, setQuery] = useState("");
   const [withMemory, setWithMemory] = useState(true);
+  const [selectedDomain, setSelectedDomain] = useState<string>("Auto-detect");
   const [loading, setLoading] = useState(false);
   const [chatHistory, setChatHistory] = useState<
     Array<{
@@ -40,14 +41,17 @@ export default function DemoPage() {
   );
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Quick preset sample tickets for 1-click testing
+  // Cross-domain preset sample queries
   const sampleQueries = [
-    { label: "STM32 I2C SDA Bus Lockup", text: "STM32F4 I2C1 bus hangs inside HAL_I2C_Master_Transmit returning HAL_BUSY. SDA line stuck LOW." },
-    { label: "ESP32 SPI DMA Buffer Overrun", text: "ESP32-S3 SPI DMA corrupts payload bytes above 20MHz clock frequency on PSRAM buffer write." },
-    { label: "nRF52 UART Framing Error in BLE", text: "nRF52840 UART framing error at 115200 baud when BLE SoftDevice connection events fire." },
-    { label: "STM32H7 Flash Brown-Out Reset", text: "STM32H7 resets with BOR flag set in RCC_RSR when writing config to internal Flash." },
-    { label: "ESP32 Task Watchdog Timeout", text: "ESP32 Task Watchdog TWDT resets MCU during flash partition encryption routine." },
+    { label: "Hardware: I2C Rise-Time Violation", domain: "Hardware", text: "I2C bus fails at 400kHz Fast Mode on PCB Rev C with 10k pull-up resistors." },
+    { label: "Hardware: Buck Converter ADC Noise", domain: "Hardware", text: "Thermistors ADC readings fluctuate by +/- 45 counts when 1.2MHz buck regulator powers load." },
+    { label: "Firmware: STM32 I2C SDA Lockup", domain: "Firmware", text: "STM32F4 I2C1 bus hangs inside HAL_I2C_Master_Transmit returning HAL_BUSY. SDA line stuck LOW." },
+    { label: "Firmware: ESP32 SPI DMA Overrun", domain: "Firmware", text: "ESP32-S3 SPI DMA corrupts payload bytes above 20MHz clock frequency on PSRAM write." },
+    { label: "Software: Python Asyncio Deadlock", domain: "Software", text: "Python IoT gateway telemetry worker halts after 2 hours with 0% CPU utilization." },
+    { label: "Software: C++ Use-After-Free", domain: "Software", text: "Linux edge gateway segfaults inside PacketHandler::process() during network burst traffic." },
   ];
+
+  const domainOptions = ["Auto-detect", "Hardware", "Firmware", "Software"];
 
   const handleSend = async (queryText?: string) => {
     const textToSubmit = queryText || query;
@@ -63,6 +67,7 @@ export default function DemoPage() {
         body: JSON.stringify({
           query: textToSubmit,
           withMemory,
+          domain: selectedDomain,
         }),
       });
 
@@ -104,17 +109,17 @@ export default function DemoPage() {
         <div>
           <div className="inline-flex items-center gap-2 text-xs font-mono text-brand-cyan mb-1">
             <Sparkles className="w-3.5 h-3.5" />
-            LIVE INTERACTIVE DEBUGGING AGENT
+            CROSS-DISCIPLINARY PUBLIC SANDBOX
           </div>
           <h1 className="text-3xl font-extrabold text-white">
             Flashback Memory Assistant <span className="gradient-brand-text">Demo</span>
           </h1>
           <p className="text-sm text-gray-400 mt-1">
-            Ask any firmware or hardware bug symptom. Toggle memory recall on/off to compare Hindsight grounded answers live.
+            Ask any Hardware, Firmware, or Software debugging question. Toggle memory recall to compare Hindsight grounded answers live.
           </p>
         </div>
 
-        {/* Toggle Mode: Answer with Memory vs Answer without Memory */}
+        {/* Toggle Mode */}
         <div className="flex items-center gap-3 bg-surface p-2 rounded-xl border border-surface-border shadow-md">
           <span className="text-xs font-medium text-gray-300">Memory Engine:</span>
           <button
@@ -143,7 +148,7 @@ export default function DemoPage() {
       {/* Main Grid: Chat Interface on Left, Memory Recall Panel on Right */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* LEFT COLUMN: Interactive Chat Window (7 Cols) */}
-        <div className="lg:col-span-7 flex flex-col h-[700px] glass-panel rounded-2xl border-surface-border overflow-hidden shadow-2xl">
+        <div className="lg:col-span-7 flex flex-col h-[720px] glass-panel rounded-2xl border-surface-border overflow-hidden shadow-2xl">
           {/* Chat Window Bar */}
           <div className="bg-[#12121D] px-4 py-3 border-b border-surface-border flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -152,9 +157,22 @@ export default function DemoPage() {
                 flashback-agent // {withMemory ? "grounded-hindsight-mode" : "standard-llm-mode"}
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-[11px] font-mono text-gray-400">Rate Limit: Active</span>
+
+            {/* Domain Selector Chips */}
+            <div className="flex items-center gap-1 bg-surface p-1 rounded-lg border border-surface-border text-[11px]">
+              {domainOptions.map((dom) => (
+                <button
+                  key={dom}
+                  onClick={() => setSelectedDomain(dom)}
+                  className={`px-2 py-0.5 rounded font-mono transition-all ${
+                    selectedDomain === dom
+                      ? "bg-brand-indigo text-white font-bold"
+                      : "text-gray-400 hover:text-white"
+                  }`}
+                >
+                  {dom}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -166,22 +184,24 @@ export default function DemoPage() {
                   <Database className="w-6 h-6 text-brand-cyan" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="text-base font-bold text-white">Ask Flashback a Firmware Bug</h3>
+                  <h3 className="text-base font-bold text-white">Ask Flashback a Debugging Question</h3>
                   <p className="text-xs text-gray-400 max-w-sm">
-                    Select a sample scenario below or type a symptom involving STM32, ESP32, nRF52, I2C, SPI, UART, DMA, or FreeRTOS.
+                    Select a cross-disciplinary sample scenario below or type a hardware, firmware, or software symptom.
                   </p>
                 </div>
 
-                {/* Preset sample buttons */}
                 <div className="w-full space-y-2 pt-2">
                   <div className="text-[11px] font-mono uppercase text-gray-500 font-semibold">
-                    Preset Bug Tickets (Click to Test):
+                    Preset Cross-Disciplinary Bug Tickets (Click to Test):
                   </div>
                   <div className="flex flex-wrap justify-center gap-2">
                     {sampleQueries.map((sq, idx) => (
                       <button
                         key={idx}
-                        onClick={() => handleSend(sq.text)}
+                        onClick={() => {
+                          setSelectedDomain(sq.domain);
+                          handleSend(sq.text);
+                        }}
                         className="text-xs px-3 py-1.5 rounded-lg bg-surface border border-surface-border hover:border-brand-indigo hover:text-white text-gray-300 transition-all text-left"
                       >
                         ⚡ {sq.label}
@@ -197,7 +217,7 @@ export default function DemoPage() {
                   <div className="flex justify-end">
                     <div className="bg-brand-indigo/30 border border-brand-indigo/50 text-white rounded-2xl rounded-tr-none px-4 py-3 max-w-[85%] text-xs sm:text-sm font-mono shadow-md">
                       <div className="text-[10px] text-brand-cyan font-sans mb-1 flex items-center gap-1">
-                        <span>ENGINEER QUERY</span> &bull; <span>{item.timestamp}</span>
+                        <span>DEBUG QUERY</span> &bull; <span>{item.timestamp}</span>
                       </div>
                       {item.userQuery}
                     </div>
@@ -210,7 +230,6 @@ export default function DemoPage() {
                         ? "bg-[#121624] border border-brand-cyan/30 text-gray-200"
                         : "bg-[#1C1418] border border-red-500/30 text-gray-300"
                     }`}>
-                      {/* Header Badge */}
                       <div className="flex items-center justify-between pb-2 border-b border-surface-border text-xs">
                         <span className="font-bold flex items-center gap-1.5">
                           {item.withMemory ? (
@@ -230,17 +249,15 @@ export default function DemoPage() {
                         </span>
                       </div>
 
-                      {/* Answer Markdown Text */}
                       <div className="prose prose-invert prose-xs leading-relaxed whitespace-pre-wrap font-sans text-xs">
                         {item.answer}
                       </div>
 
-                      {/* Recalled incidents footer tag */}
                       {item.incidentsUsed.length > 0 && (
                         <div className="pt-2 border-t border-surface-border/60 flex items-center justify-between text-[11px] text-gray-400 font-mono">
                           <span className="flex items-center gap-1 text-emerald-400">
                             <CheckCircle2 className="w-3.5 h-3.5" />
-                            Recalled Ticket: {item.incidentsUsed[0].id} ({item.incidentsUsed[0].mcu})
+                            Recalled Ticket: {item.incidentsUsed[0].id} ({item.incidentsUsed[0].domain})
                           </span>
                           <button
                             onClick={() => setSelectedIncident(item.incidentsUsed[0])}
@@ -259,7 +276,7 @@ export default function DemoPage() {
             {loading && (
               <div className="flex items-center gap-3 p-4 rounded-xl bg-surface/50 border border-surface-border text-xs text-brand-cyan font-mono">
                 <RefreshCw className="w-4 h-4 animate-spin" />
-                <span>Hindsight Cloud Vector Searching & Groq Synthesis...</span>
+                <span>Hindsight Cloud Vector Searching &amp; Groq Synthesis...</span>
               </div>
             )}
 
@@ -284,7 +301,7 @@ export default function DemoPage() {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Describe bug (e.g., STM32 I2C lockup, ESP32 SPI DMA corruption)..."
+                placeholder="Describe bug (e.g., I2C rise time, Python asyncio deadlock, ESP32 DMA overrun)..."
                 className="flex-1 bg-surface border border-surface-border rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-indigo transition-colors font-mono"
               />
               <button
@@ -302,30 +319,30 @@ export default function DemoPage() {
         {/* RIGHT COLUMN: Visible "Memory Recall" Panel (5 Cols) */}
         <div className="lg:col-span-5 space-y-6">
           <div className="glass-panel rounded-2xl p-6 border-surface-border space-y-5 shadow-2xl">
-            {/* Panel Title */}
             <div className="flex items-center justify-between pb-4 border-b border-surface-border">
               <div className="flex items-center gap-2">
                 <Database className="w-5 h-5 text-brand-cyan" />
                 <h2 className="text-base font-bold text-white">Hindsight Memory Panel</h2>
               </div>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-brand-cyan/20 text-brand-cyan border border-brand-cyan/30 font-bold">
-                22 Seeded Incidents
+                {SEEDED_INCIDENTS.length} Incident Records
               </span>
             </div>
 
             {selectedIncident ? (
               <div className="space-y-4 text-xs">
-                {/* Incident Badge */}
                 <div className="flex items-center justify-between">
                   <span className="font-mono font-bold text-sm text-brand-cyan">
                     {selectedIncident.id}
                   </span>
                   <span className={`px-2 py-0.5 rounded font-mono text-[10px] uppercase font-bold ${
-                    selectedIncident.impact === "Critical"
-                      ? "bg-red-500/20 text-red-400 border border-red-500/30"
-                      : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                    selectedIncident.domain === "Hardware"
+                      ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                      : selectedIncident.domain === "Software"
+                      ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
+                      : "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
                   }`}>
-                    {selectedIncident.impact} Impact
+                    {selectedIncident.domain} &bull; {selectedIncident.impact}
                   </span>
                 </div>
 
@@ -333,10 +350,9 @@ export default function DemoPage() {
                   {selectedIncident.title}
                 </h3>
 
-                {/* Metadata grid */}
                 <div className="grid grid-cols-2 gap-2 p-3 rounded-lg bg-[#0B0B14] border border-surface-border text-[11px] font-mono text-gray-300">
                   <div>
-                    <span className="text-gray-500 block text-[10px]">MCU FAMILY</span>
+                    <span className="text-gray-500 block text-[10px]">SUBSYSTEM / MCU</span>
                     <span className="text-brand-cyan font-bold">{selectedIncident.mcu}</span>
                   </div>
                   <div>
@@ -348,12 +364,11 @@ export default function DemoPage() {
                     <span className="text-gray-400">{selectedIncident.date}</span>
                   </div>
                   <div>
-                    <span className="text-gray-500 block text-[10px]">RECALL SCORE</span>
-                    <span className="text-emerald-400 font-bold">{selectedIncident.confidence || 96}% Match</span>
+                    <span className="text-gray-500 block text-[10px]">RECALL MATCH</span>
+                    <span className="text-emerald-400 font-bold">{selectedIncident.confidence || 96}%</span>
                   </div>
                 </div>
 
-                {/* Symptom */}
                 <div className="space-y-1">
                   <span className="text-[10px] font-mono uppercase text-gray-400 font-bold">Symptom</span>
                   <p className="text-gray-300 text-xs bg-surface p-2.5 rounded border border-surface-border leading-relaxed">
@@ -361,7 +376,6 @@ export default function DemoPage() {
                   </p>
                 </div>
 
-                {/* Root Cause */}
                 <div className="space-y-1">
                   <span className="text-[10px] font-mono uppercase text-brand-cyan font-bold">Root Cause</span>
                   <p className="text-gray-200 text-xs bg-brand-cyan/10 p-2.5 rounded border border-brand-cyan/20 leading-relaxed">
@@ -369,7 +383,6 @@ export default function DemoPage() {
                   </p>
                 </div>
 
-                {/* Fix Details */}
                 <div className="space-y-1">
                   <span className="text-[10px] font-mono uppercase text-emerald-400 font-bold">Proven Fix</span>
                   <p className="text-gray-200 text-xs bg-emerald-950/20 p-2.5 rounded border border-emerald-800/30 leading-relaxed">
@@ -377,12 +390,11 @@ export default function DemoPage() {
                   </p>
                 </div>
 
-                {/* Code Snippet */}
                 {selectedIncident.codeSnippet && (
                   <div className="space-y-1">
                     <span className="text-[10px] font-mono uppercase text-gray-400 font-bold flex items-center gap-1">
                       <FileCode className="w-3 h-3 text-brand-cyan" />
-                      Patch Code Snippet
+                      Patch Code / Circuit Notes
                     </span>
                     <pre className="p-3 rounded-lg bg-[#050508] border border-surface-border text-[11px] font-mono text-emerald-300 overflow-x-auto">
                       {selectedIncident.codeSnippet}
@@ -397,14 +409,13 @@ export default function DemoPage() {
             )}
           </div>
 
-          {/* Quick incident list drawer */}
           <div className="glass-panel rounded-2xl p-5 border-surface-border space-y-3">
             <h4 className="text-xs font-mono font-bold uppercase text-gray-400 flex items-center justify-between">
-              <span>Seeded Incident Index</span>
-              <span className="text-brand-cyan">22 Total</span>
+              <span>Seeded Incident Catalog</span>
+              <span className="text-brand-cyan">{SEEDED_INCIDENTS.length} Total</span>
             </h4>
             <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-              {SEEDED_INCIDENTS.slice(0, 6).map((inc) => (
+              {SEEDED_INCIDENTS.slice(0, 8).map((inc) => (
                 <button
                   key={inc.id}
                   onClick={() => setSelectedIncident(inc)}
@@ -416,7 +427,7 @@ export default function DemoPage() {
                 >
                   <span className="truncate pr-2">{inc.id}: {inc.title}</span>
                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface border border-surface-border shrink-0">
-                    {inc.mcu.split("")[0]}
+                    {inc.domain}
                   </span>
                 </button>
               ))}

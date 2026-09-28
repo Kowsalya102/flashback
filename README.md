@@ -1,117 +1,71 @@
-# Flashback — Persistent Memory AI Agent for Embedded Engineering
+# Flashback — Persistent Memory AI Agent for General Engineering Debugging
 
 > **"The debugging assistant that never forgets a fix."**
 
-Flashback is a production-ready web platform and interactive debugging assistant that gives firmware and embedded engineering teams persistent memory of past hardware, protocol, and driver bug fixes. Powered by **Hindsight** (Vector Memory API by Vectorize) and **Groq**, Flashback eliminates duplicate debugging cycles by retrieving team incident records, register configurations, and board revision notes.
+Flashback is a production-ready web platform and interactive debugging assistant that gives engineering teams persistent memory across **Hardware**, **Embedded/Firmware**, and **Software** debugging incidents. Powered by **Hindsight** (Vector Memory API by Vectorize) and **Groq**, Flashback eliminates duplicate debugging cycles by retrieving team incident records, register configurations, board revision notes, and stack trace solutions.
 
 ---
 
 ## ⚡ Tech Stack & Architecture
 
 - **Framework**: Next.js (App Router, Server Actions, TypeScript)
-- **Styling**: Tailwind CSS + Framer Motion
-- **Backend API**: Next.js Serverless API Routes (`/api/chat`)
+- **Styling**: Tailwind CSS + Framer Motion + Lucide React
+- **Backend API**: Next.js Serverless API Routes (`/api/chat`, `/api/auth/*`, `/api/memory/*`, `/api/conversations/*`)
 - **LLM Engine**: Groq API (`openai/gpt-oss-120b` or `llama-3.3-70b-versatile`)
 - **Vector Memory**: Hindsight Cloud API (`https://ui.hindsight.vectorize.io`)
 - **Deployment**: Vercel Serverless Platform (Continuous 24/7 Deployment)
 
 ---
 
-## 🚀 Live Public Deployment
+## 🛠️ Key Capabilities & Enhancements
 
-The application is deployed live on Vercel:
-👉 **[https://flashback-memory.vercel.app](https://flashback-memory.vercel.app)** *(or your connected Vercel URL)*
+1. **Cross-Disciplinary Debugging**:
+   - **HARDWARE**: Power supply ripple, I2C pull-up sizing, ADC noise, motor back-EMF, BLE antenna tuning, MOSFET thermal dissipation.
+   - **EMBEDDED/FIRMWARE**: STM32, ESP32, nRF52, AVR, RP2040, FreeRTOS, Zephyr, EasyDMA, watchdogs, low-power modes.
+   - **SOFTWARE**: Python asyncio deadlocks, C++ use-after-free, Go race conditions, Docker cache invalidations, PostgreSQL N+1 queries.
 
----
+2. **Per-User Hindsight Memory Engine**:
+   - Every registered user gets a dedicated Hindsight memory bank (`bank_id`).
+   - Automatic **Recall** per query, grounded answers, and structured **Retain** on "Mark as Solved".
+   - **Reflect Insights**: Automated pattern analysis across past incident history.
 
-## 🛠️ Step-by-Step Vercel Deployment Instructions
-
-### Method 1: Deploying via Vercel CLI (Recommended)
-
-1. **Clone & Install Dependencies**:
-   ```bash
-   git clone https://github.com/Kowshik-11/Flashback.git
-   cd Flashback
-   npm install
-   ```
-
-2. **Login to Vercel CLI**:
-   ```bash
-   npx vercel login
-   ```
-
-3. **Deploy to Vercel**:
-   ```bash
-   npx vercel --prod
-   ```
-
-4. **Set Production Environment Variables**:
-   In your Vercel Project Dashboard under **Settings → Environment Variables**, add:
-   - `GROQ_API_KEY`: Your Groq API secret key
-   - `HINDSIGHT_API_KEY`: Your Vectorize Hindsight API key
-   - `HINDSIGHT_PROJECT_ID`: Your Vectorize Project ID
-
-5. **Redeploy**:
-   ```bash
-   npx vercel --prod
-   ```
+3. **ChatGPT/Claude-Style Chat Interface at `/app`**:
+   - Multi-turn conversation sidebar grouped by date with rename/delete/pin options.
+   - Domain selector chips (`Auto-detect`, `Hardware`, `Firmware`, `Software`).
+   - File attachment dropzone for text/log/code files (`.txt`, `.log`, `.c`, `.cpp`, `.py`, `.js`, `.ts`).
+   - Embedded engineering calculators & log diagnostic analyzer.
 
 ---
 
-### Method 2: Connect GitHub Repository to Vercel (Continuous Deployment)
+## 🚀 Environment Variables
 
-1. Push this repository to GitHub:
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit - Flashback web platform"
-   git remote add origin https://github.com/<your-username>/flashback.git
-   git branch -M main
-   git push -u origin main
-   ```
+Copy `.env.example` to `.env.local` or set in your Vercel Dashboard:
 
-2. Go to [Vercel Dashboard](https://vercel.com/new) and click **"Add New Project"**.
-3. Import your `flashback` GitHub repository.
-4. Set the **Framework Preset** to `Next.js`.
-5. Under **Environment Variables**, configure `GROQ_API_KEY`, `HINDSIGHT_API_KEY`, and `HINDSIGHT_PROJECT_ID`.
-6. Click **Deploy**. Vercel will automatically build and deploy every new commit pushed to `main`.
+```env
+# GROQ API Key (Groq LPU LLM inference)
+GROQ_API_KEY=your_groq_api_key_here
 
----
+# Hindsight Vector Memory API Credentials (by Vectorize)
+HINDSIGHT_API_KEY=your_hindsight_api_key_here
+HINDSIGHT_PROJECT_ID=your_hindsight_project_id_here
 
-### Method 3: Custom Domain Instructions
+# Optional: Override Groq Model Name (defaults to openai/gpt-oss-120b)
+GROQ_MODEL=openai/gpt-oss-120b
 
-1. Navigate to your project in the Vercel Dashboard.
-2. Go to **Settings → Domains**.
-3. Enter your custom domain (e.g., `flashback.yourdomain.com` or `flashback.ai`).
-4. Add the generated `CNAME` or `A` records to your DNS provider (Cloudflare, Namecheap, Route53).
-5. Vercel will automatically issue an SSL/TLS certificate for continuous HTTPS access.
-
----
-
-## 🔒 Security & Key Protection
-
-All API calls to Groq and Hindsight are routed strictly through Next.js serverless functions (`/api/chat`). API keys are stored in server-side environment variables and are **never exposed to the browser client**.
-
----
-
-## 🧪 Local Development
-
-To run Flashback locally on your workstation:
-
-```bash
-# 1. Copy environment template
-cp .env.example .env.local
-
-# 2. Start local development server
-npm run dev
+# JWT Secret for Auth Sessions
+JWT_SECRET=your_jwt_secret_key
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the app.
+---
+
+## 📜 How Hindsight Retain, Recall, and Reflect are Used
+
+- **Recall**: Executed prior to generating each response. Queries the user's vector memory index using semantic similarity search to retrieve relevant past incident tickets.
+- **Retain**: Triggered when a user clicks "Mark as Solved" or confirms a resolution. Formats the incident into structured metadata (symptom, domain, root cause, fix, tags) and indexes it into Hindsight.
+- **Reflect**: Periodically scans stored memory vectors to identify recurring root causes, most troublesome subsystems, and recommended preventive checks.
 
 ---
 
-## 📜 License & Attribution
+## 🔒 Security & Data Isolation
 
-- Powered by [Hindsight Memory API](https://hindsight.vectorize.io/) by Vectorize.
-- Powered by [Groq LPU](https://groq.com).
-- Developed for embedded and firmware software engineering teams.
+All API keys are held server-side and never exposed to the client. Each user's memory events are isolated to their personal account and authenticated session token.
