@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { MainContainer } from "@/components/MainContainer";
 
 export const metadata: Metadata = {
   title: "Flashback — The Debugging Assistant That Never Forgets a Fix",
@@ -42,9 +43,9 @@ export default function RootLayout({
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/apple-icon.png" />
       </head>
-      <body className="bg-background text-foreground antialiased min-h-screen flex flex-col justify-between selection:bg-brand-indigo selection:text-white">
+      <body className="bg-background text-foreground antialiased min-h-screen min-h-[100dvh] flex flex-col justify-between selection:bg-brand-indigo selection:text-white">
         <Navbar />
-        <main className="flex-1 pt-20">{children}</main>
+        <MainContainer>{children}</MainContainer>
         <Footer />
       </body>
     </html>

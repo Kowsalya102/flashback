@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { cookies } from "next/headers";
 import { getUserById, User } from "./db";
 
-const JWT_SECRET = process.env.JWT_SECRET || "flashback_super_secret_jwt_key_2026";
+const JWT_SECRET = process.env.AUTH_SECRET || process.env.JWT_SECRET || "flashback_super_secret_jwt_key_2026";
 const COOKIE_NAME = "flashback_session";
 
 export function hashPassword(password: string): string {
@@ -51,9 +51,10 @@ export async function getCurrentUser(): Promise<User | null> {
 
 export function setSessionCookie(responseHeaders: Headers, userId: string) {
   const token = generateToken(userId);
+  const isProd = process.env.NODE_ENV === "production";
   responseHeaders.append(
     "Set-Cookie",
-    `${COOKIE_NAME}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${86400 * 30}`
+    `${COOKIE_NAME}=${token}; Path=/; HttpOnly; ${isProd ? "Secure; " : ""}SameSite=Lax; Max-Age=${86400 * 30}`
   );
 }
 

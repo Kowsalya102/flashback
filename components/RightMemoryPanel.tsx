@@ -24,8 +24,8 @@ export const RightMemoryPanel: React.FC<Props> = ({
   if (!isOpen) return null;
 
   return (
-    <aside className="w-80 bg-[#0C0C14] border-l border-[#232332] flex flex-col justify-between shrink-0 overflow-y-auto z-20 space-y-4 font-mono text-xs text-gray-200">
-      <div className="space-y-4 p-4">
+    <aside className="w-80 bg-[#0C0C14] border-l border-[#232332] flex flex-col justify-between shrink-0 h-full overflow-hidden z-20 font-mono text-xs text-gray-200">
+      <div className="space-y-4 p-4 flex-1 min-h-0 overflow-y-auto">
         {/* Top Header */}
         <div className="flex items-center justify-between pb-3 border-b border-[#232332]">
           <div className="flex items-center gap-2">
@@ -129,7 +129,7 @@ export const RightMemoryPanel: React.FC<Props> = ({
         )}
       </div>
 
-      <div className="p-4 border-t border-[#232332]">
+      <div className="p-4 border-t border-[#232332] shrink-0">
         <Link
           href="/memory"
           className="w-full py-2.5 rounded-xl bg-[#151522] border border-[#232332] text-gray-300 hover:text-white text-xs font-bold flex items-center justify-center gap-2 transition-all"

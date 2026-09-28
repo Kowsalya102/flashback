@@ -47,6 +47,8 @@ function AppShellContent({ initialConvId }: Props) {
   const [conversations, setConversations] = useState<any[]>([]);
   const [activeConvId, setActiveConvId] = useState<string | null>(initialConvId || null);
   const [messages, setMessages] = useState<any[]>([]);
+  const [convNotFound, setConvNotFound] = useState<boolean>(false);
+  const [greetingTime, setGreetingTime] = useState<string>("day");
   const [selectedDomain, setSelectedDomain] = useState<string>("Auto-detect");
   const [memoryEnabled, setMemoryEnabled] = useState<boolean>(true);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
@@ -61,6 +63,24 @@ function AppShellContent({ initialConvId }: Props) {
   const [calculatorsOpen, setCalculatorsOpen] = useState<boolean>(false);
   const [markSolvedOpen, setMarkSolvedOpen] = useState<boolean>(false);
   const [msgForSolve, setMsgForSolve] = useState<any>(null);
+
+  // Safe greeting calculation on mount (prevents SSR hydration mismatch)
+  useEffect(() => {
+    const hr = new Date().getHours();
+    setGreetingTime(hr < 12 ? "morning" : hr < 18 ? "afternoon" : "evening");
+  }, []);
+
+  // Sync initialConvId prop changes (for browser Back/Forward navigation between chats)
+  useEffect(() => {
+    if (initialConvId) {
+      setActiveConvId(initialConvId);
+      selectConversation(initialConvId);
+    } else {
+      setActiveConvId(null);
+      setMessages([]);
+      setConvNotFound(false);
+    }
+  }, [initialConvId]);
 
   // Load User & Conversations
   useEffect(() => {
@@ -90,9 +110,10 @@ function AppShellContent({ initialConvId }: Props) {
       const res = await fetch("/api/conversations");
       if (res.ok) {
         const data = await res.json();
-        setConversations(data.conversations || []);
-        if (data.conversations && data.conversations.length > 0 && !activeConvId) {
-          selectConversation(data.conversations[0].id);
+        const convList = Array.isArray(data.conversations) ? data.conversations : [];
+        setConversations(convList);
+        if (convList.length > 0 && !activeConvId && !initialConvId) {
+          selectConversation(convList[0].id);
         }
       }
     } catch (err) {
@@ -102,18 +123,34 @@ function AppShellContent({ initialConvId }: Props) {
 
   const selectConversation = async (id: string) => {
     setActiveConvId(id);
+    setConvNotFound(false);
+
+    if (isGuestMode) {
+      const found = conversations.find((c) => c.id === id);
+      if (!found && id.startsWith("guest_conv_") === false) {
+        setConvNotFound(true);
+        setMessages([]);
+      }
+      return;
+    }
+
     try {
       const res = await fetch(`/api/conversations/${id}`);
       if (res.ok) {
         const data = await res.json();
-        setMessages(data.messages || []);
+        setMessages(Array.isArray(data.messages) ? data.messages : []);
         if (data.conversation) {
           setMemoryEnabled(data.conversation.memoryEnabled ?? true);
           setSelectedDomain(data.conversation.domain || "Auto-detect");
         }
+      } else {
+        setConvNotFound(true);
+        setMessages([]);
       }
     } catch (err) {
       console.error(err);
+      setConvNotFound(true);
+      setMessages([]);
     }
   };
 
@@ -225,9 +262,9 @@ function AppShellContent({ initialConvId }: Props) {
           sidebarOpen ? "w-64" : "w-14"
         } transition-all duration-300 bg-[#0F0F17] border-r border-[#232332] flex flex-col justify-between overflow-hidden shrink-0 z-30`}
       >
-        <div className="p-3 space-y-3">
+        <div className="p-3 space-y-3 flex-1 min-h-0 flex flex-col">
           {/* Header & Logo */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between shrink-0">
             <Link href="/" className="flex items-center gap-2">
               <Logo size={28} showWordmark={sidebarOpen} />
             </Link>
@@ -242,7 +279,7 @@ function AppShellContent({ initialConvId }: Props) {
           {/* New Chat Button */}
           <button
             onClick={handleNewChat}
-            className={`w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#06B6D4] text-white text-xs font-bold shadow-glow-indigo flex items-center justify-center gap-2 transition-all ${
+            className={`w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#06B6D4] text-white text-xs font-bold shadow-glow-indigo flex items-center justify-center gap-2 transition-all shrink-0 ${
               !sidebarOpen && "px-0"
             }`}
           >
@@ -254,7 +291,7 @@ function AppShellContent({ initialConvId }: Props) {
           {sidebarOpen && (
             <button
               onClick={() => setPaletteOpen(true)}
-              className="w-full py-1.5 px-3 rounded-xl bg-[#181824] border border-[#232332] text-xs font-mono text-gray-400 flex items-center justify-between hover:text-white"
+              className="w-full py-1.5 px-3 rounded-xl bg-[#181824] border border-[#232332] text-xs font-mono text-gray-400 flex items-center justify-between hover:text-white shrink-0"
             >
               <span className="flex items-center gap-2">
                 <Search className="w-3.5 h-3.5 text-[#06B6D4]" /> Search chats...
@@ -265,7 +302,7 @@ function AppShellContent({ initialConvId }: Props) {
 
           {/* Conversations List */}
           {sidebarOpen && (
-            <div className="space-y-1 max-h-[calc(100vh-260px)] overflow-y-auto pr-1">
+            <div className="space-y-1 flex-1 min-h-0 overflow-y-auto pr-1">
               <div className="text-[10px] font-mono uppercase text-gray-500 px-2 py-1 font-bold">
                 Recents
               </div>
@@ -295,7 +332,7 @@ function AppShellContent({ initialConvId }: Props) {
 
         {/* Bottom Account Block */}
         {sidebarOpen && (
-          <div className="p-3 border-t border-[#232332] bg-[#0B0B12] flex items-center justify-between text-xs font-mono">
+          <div className="p-3 border-t border-[#232332] bg-[#0B0B12] flex items-center justify-between text-xs font-mono shrink-0">
             <div className="flex items-center gap-2 truncate">
               <div className="w-7 h-7 rounded-full bg-gradient-to-r from-[#6366F1] to-[#06B6D4] flex items-center justify-center font-bold text-white text-[11px]">
                 {user?.name ? user.name[0].toUpperCase() : "G"}
@@ -313,7 +350,7 @@ function AppShellContent({ initialConvId }: Props) {
       </aside>
 
       {/* 2. MAIN AREA */}
-      <div className="flex-1 flex flex-col justify-between h-full relative overflow-hidden bg-[#09090D]">
+      <div className="flex-1 flex flex-col justify-between h-full min-w-0 min-h-0 relative overflow-hidden bg-[#09090D]">
         {/* Slim Top Bar */}
         <AppTopBar
           title={currentConv?.title || "New Debug Session"}
@@ -325,14 +362,33 @@ function AppShellContent({ initialConvId }: Props) {
         />
 
         {/* Messages List Area */}
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6">
-          {messages.length === 0 ? (
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6">
+          {convNotFound ? (
+            <div className="h-full flex flex-col items-center justify-center text-center space-y-4 max-w-md mx-auto py-12 font-mono text-xs">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center">
+                <MessageSquare className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h2 className="text-base font-bold text-white">Debug Session Not Found</h2>
+                <p className="text-xs text-gray-400">
+                  This conversation may have been deleted, expired, or belongs to another user account.
+                </p>
+              </div>
+              <button
+                onClick={handleNewChat}
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#06B6D4] text-white font-bold text-xs shadow-glow-indigo hover:scale-105 transition-all flex items-center justify-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Start New Debug Session</span>
+              </button>
+            </div>
+          ) : messages.length === 0 ? (
             /* EMPTY STATE: Greeting & Suggested Prompts */
             <div className="h-full flex flex-col items-center justify-center text-center space-y-6 max-w-xl mx-auto py-12">
               <Logo size={48} showWordmark={false} />
               <div className="space-y-2">
                 <h1 className="text-2xl font-extrabold text-white">
-                  Good {new Date().getHours() < 12 ? "morning" : new Date().getHours() < 18 ? "afternoon" : "evening"}, {user?.name?.split(" ")[0] || "Engineer"}
+                  Good {greetingTime}, {(user && typeof user.name === "string" && user.name.trim()) ? user.name.trim().split(" ")[0] : "Engineer"}
                 </h1>
                 <p className="text-xs text-gray-400">
                   Ask any Hardware, Firmware, or Software question. Flashback will recall your team's past incident tickets.
@@ -375,7 +431,11 @@ function AppShellContent({ initialConvId }: Props) {
             <ChatMessageList
               messages={messages}
               isGenerating={isGenerating}
-              onCopyMsg={(text) => navigator.clipboard.writeText(text)}
+              onCopyMsg={(text) => {
+                if (typeof navigator !== "undefined" && navigator.clipboard) {
+                  navigator.clipboard.writeText(text).catch(() => {});
+                }
+              }}
               onRegenerateMsg={() => messages.length > 0 && handleSendMessage(messages[messages.length - 2]?.content || "", selectedDomain, [])}
               onSelectPromptSuggestion={(p) => handleSendMessage(p, selectedDomain, [])}
               onOpenMarkSolved={(msg) => { setMsgForSolve(msg); setMarkSolvedOpen(true); }}

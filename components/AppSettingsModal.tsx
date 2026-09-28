@@ -46,7 +46,7 @@ export const AppSettingsModal: React.FC<Props> = ({ isOpen, onClose, user, onUpd
 
   return (
     <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-[#11111A] border border-[#232332] w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[540px]">
+      <div className="bg-[#11111A] border border-[#232332] w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[540px] max-h-[90dvh]">
         {/* Modal Header */}
         <div className="px-6 py-4 border-b border-[#232332] flex items-center justify-between bg-[#151522]">
           <h2 className="text-sm font-bold text-white flex items-center gap-2">

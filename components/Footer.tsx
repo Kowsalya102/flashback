@@ -1,9 +1,17 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Logo } from "./Logo";
 import { Github, ExternalLink, Cpu, Database, Heart } from "lucide-react";
 
 export const Footer: React.FC = () => {
+  const pathname = usePathname();
+  if (pathname?.startsWith("/app") || pathname?.startsWith("/chat")) {
+    return null;
+  }
+
   return (
     <footer className="border-t border-surface-border bg-[#07070B] text-gray-400 py-12 relative overflow-hidden">
       {/* Background ambient glow */}

@@ -16,9 +16,13 @@ export const Navbar: React.FC = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      if (typeof window !== "undefined") {
+        setScrolled(window.scrollY > 20);
+      }
     };
-    window.addEventListener("scroll", handleScroll);
+    if (typeof window !== "undefined") {
+      window.addEventListener("scroll", handleScroll);
+    }
 
     fetch("/api/auth/me")
       .then((res) => (res.ok ? res.json() : null))
@@ -29,7 +33,11 @@ export const Navbar: React.FC = () => {
       })
       .catch(() => {});
 
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("scroll", handleScroll);
+      }
+    };
   }, [pathname]);
 
   const handleLogout = async () => {
@@ -42,11 +50,15 @@ export const Navbar: React.FC = () => {
 
   const navLinks = [
     { name: "Home", href: "/" },
-    { name: "App", href: "/app", badge: "Live" },
+    { name: "App", href: "/chat", badge: "Live" },
     { name: "Public Sandbox", href: "/demo" },
     { name: "Timeline", href: "/timeline" },
     { name: "Team", href: "/about" },
   ];
+
+  if (pathname?.startsWith("/app") || pathname?.startsWith("/chat")) {
+    return null;
+  }
 
   return (
     <header

@@ -20,6 +20,8 @@ import {
   ShieldAlert
 } from "lucide-react";
 
+import { ComponentErrorBoundary } from "./ErrorBoundary";
+
 interface Props {
   messages: any[];
   isGenerating?: boolean;
@@ -54,13 +56,14 @@ export const ChatMessageList: React.FC<Props> = ({
   };
 
   return (
-    <div className="space-y-6 max-w-[760px] mx-auto w-full font-sans text-sm text-gray-200 py-4">
+    <div className="space-y-6 max-w-[760px] mx-auto w-full font-sans text-sm text-gray-200 pt-4 pb-8">
       {messages.map((msg, idx) => {
         const isUser = msg.role === "user";
         const isLastAssistant = !isUser && idx === messages.length - 1;
 
         return (
-          <div key={msg.id || idx} className="space-y-3 group">
+          <ComponentErrorBoundary key={msg?.id || idx} fallbackTitle="Message Turn Render Error">
+            <div className="space-y-3 group">
             {/* User Message */}
             {isUser ? (
               <div className="flex justify-end">
@@ -196,8 +199,9 @@ export const ChatMessageList: React.FC<Props> = ({
               </div>
             )}
           </div>
-        );
-      })}
+        </ComponentErrorBoundary>
+      );
+    })}
 
       {/* Streaming Shimmer Indicator */}
       {isGenerating && (
