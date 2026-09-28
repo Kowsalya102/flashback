@@ -47,6 +47,8 @@ function AppShellContent({ initialConvId }: Props) {
   const [conversations, setConversations] = useState<any[]>([]);
   const [activeConvId, setActiveConvId] = useState<string | null>(initialConvId || null);
   const [messages, setMessages] = useState<any[]>([]);
+  const [convNotFound, setConvNotFound] = useState<boolean>(false);
+  const [greetingTime, setGreetingTime] = useState<string>("day");
   const [selectedDomain, setSelectedDomain] = useState<string>("Auto-detect");
   const [memoryEnabled, setMemoryEnabled] = useState<boolean>(true);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
@@ -61,6 +63,24 @@ function AppShellContent({ initialConvId }: Props) {
   const [calculatorsOpen, setCalculatorsOpen] = useState<boolean>(false);
   const [markSolvedOpen, setMarkSolvedOpen] = useState<boolean>(false);
   const [msgForSolve, setMsgForSolve] = useState<any>(null);
+
+  // Safe greeting calculation on mount (prevents SSR hydration mismatch)
+  useEffect(() => {
+    const hr = new Date().getHours();
+    setGreetingTime(hr < 12 ? "morning" : hr < 18 ? "afternoon" : "evening");
+  }, []);
+
+  // Sync initialConvId prop changes (for browser Back/Forward navigation between chats)
+  useEffect(() => {
+    if (initialConvId) {
+      setActiveConvId(initialConvId);
+      selectConversation(initialConvId);
+    } else {
+      setActiveConvId(null);
+      setMessages([]);
+      setConvNotFound(false);
+    }
+  }, [initialConvId]);
 
   // Load User & Conversations
   useEffect(() => {
@@ -90,9 +110,10 @@ function AppShellContent({ initialConvId }: Props) {
       const res = await fetch("/api/conversations");
       if (res.ok) {
         const data = await res.json();
-        setConversations(data.conversations || []);
-        if (data.conversations && data.conversations.length > 0 && !activeConvId) {
-          selectConversation(data.conversations[0].id);
+        const convList = Array.isArray(data.conversations) ? data.conversations : [];
+        setConversations(convList);
+        if (convList.length > 0 && !activeConvId && !initialConvId) {
+          selectConversation(convList[0].id);
         }
       }
     } catch (err) {
@@ -102,18 +123,34 @@ function AppShellContent({ initialConvId }: Props) {
 
   const selectConversation = async (id: string) => {
     setActiveConvId(id);
+    setConvNotFound(false);
+
+    if (isGuestMode) {
+      const found = conversations.find((c) => c.id === id);
+      if (!found && id.startsWith("guest_conv_") === false) {
+        setConvNotFound(true);
+        setMessages([]);
+      }
+      return;
+    }
+
     try {
       const res = await fetch(`/api/conversations/${id}`);
       if (res.ok) {
         const data = await res.json();
-        setMessages(data.messages || []);
+        setMessages(Array.isArray(data.messages) ? data.messages : []);
         if (data.conversation) {
           setMemoryEnabled(data.conversation.memoryEnabled ?? true);
           setSelectedDomain(data.conversation.domain || "Auto-detect");
         }
+      } else {
+        setConvNotFound(true);
+        setMessages([]);
       }
     } catch (err) {
       console.error(err);
+      setConvNotFound(true);
+      setMessages([]);
     }
   };
 
@@ -326,13 +363,32 @@ function AppShellContent({ initialConvId }: Props) {
 
         {/* Messages List Area */}
         <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6">
-          {messages.length === 0 ? (
+          {convNotFound ? (
+            <div className="h-full flex flex-col items-center justify-center text-center space-y-4 max-w-md mx-auto py-12 font-mono text-xs">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center">
+                <MessageSquare className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h2 className="text-base font-bold text-white">Debug Session Not Found</h2>
+                <p className="text-xs text-gray-400">
+                  This conversation may have been deleted, expired, or belongs to another user account.
+                </p>
+              </div>
+              <button
+                onClick={handleNewChat}
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#06B6D4] text-white font-bold text-xs shadow-glow-indigo hover:scale-105 transition-all flex items-center justify-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Start New Debug Session</span>
+              </button>
+            </div>
+          ) : messages.length === 0 ? (
             /* EMPTY STATE: Greeting & Suggested Prompts */
             <div className="h-full flex flex-col items-center justify-center text-center space-y-6 max-w-xl mx-auto py-12">
               <Logo size={48} showWordmark={false} />
               <div className="space-y-2">
                 <h1 className="text-2xl font-extrabold text-white">
-                  Good {new Date().getHours() < 12 ? "morning" : new Date().getHours() < 18 ? "afternoon" : "evening"}, {user?.name?.split(" ")[0] || "Engineer"}
+                  Good {greetingTime}, {(user && typeof user.name === "string" && user.name.trim()) ? user.name.trim().split(" ")[0] : "Engineer"}
                 </h1>
                 <p className="text-xs text-gray-400">
                   Ask any Hardware, Firmware, or Software question. Flashback will recall your team's past incident tickets.
@@ -375,7 +431,11 @@ function AppShellContent({ initialConvId }: Props) {
             <ChatMessageList
               messages={messages}
               isGenerating={isGenerating}
-              onCopyMsg={(text) => navigator.clipboard.writeText(text)}
+              onCopyMsg={(text) => {
+                if (typeof navigator !== "undefined" && navigator.clipboard) {
+                  navigator.clipboard.writeText(text).catch(() => {});
+                }
+              }}
               onRegenerateMsg={() => messages.length > 0 && handleSendMessage(messages[messages.length - 2]?.content || "", selectedDomain, [])}
               onSelectPromptSuggestion={(p) => handleSendMessage(p, selectedDomain, [])}
               onOpenMarkSolved={(msg) => { setMsgForSolve(msg); setMarkSolvedOpen(true); }}

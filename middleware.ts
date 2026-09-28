@@ -4,7 +4,14 @@ import type { NextRequest } from "next/server";
 export function middleware(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
 
-  // 1. Allow public routes, static assets, and auth endpoints
+  // 1. Redirect /app directly to /chat to open new chat session immediately
+  if (pathname === "/app") {
+    const chatUrl = new URL("/chat", req.url);
+    searchParams.forEach((value, key) => chatUrl.searchParams.set(key, value));
+    return NextResponse.redirect(chatUrl, { status: 307 });
+  }
+
+  // 2. Allow public routes, static assets, and auth endpoints
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/static") ||
@@ -21,18 +28,18 @@ export function middleware(req: NextRequest) {
   ) {
     const token = req.cookies.get("flashback_session")?.value;
     if (token && (pathname === "/login" || pathname === "/signup")) {
-      return NextResponse.redirect(new URL("/app", req.url));
+      return NextResponse.redirect(new URL("/chat", req.url));
     }
     return NextResponse.next();
   }
 
-  // 2. Allow Guest mode access
+  // 3. Allow Guest mode access
   const isGuest = searchParams.get("mode") === "guest";
   if (isGuest) {
     return NextResponse.next();
   }
 
-  // 3. Protect app routes (/app, /chat, /memory, /settings, etc.)
+  // 4. Protect app routes (/chat, /memory, /settings, etc.)
   const token = req.cookies.get("flashback_session")?.value;
   if (!token) {
     const loginUrl = new URL("/login", req.url);

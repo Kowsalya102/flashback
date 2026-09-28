@@ -18,23 +18,28 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [theme, setThemeState] = useState<Theme>("dark");
 
   useEffect(() => {
-    const saved = localStorage.getItem("flashback_theme") as Theme;
-    if (saved) {
-      setThemeState(saved);
+    if (typeof window !== "undefined" && window.localStorage) {
+      const saved = localStorage.getItem("flashback_theme") as Theme;
+      if (saved) {
+        setThemeState(saved);
+      }
     }
   }, []);
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
-    localStorage.setItem("flashback_theme", newTheme);
+    if (typeof window !== "undefined" && window.localStorage) {
+      localStorage.setItem("flashback_theme", newTheme);
+    }
   };
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     const root = document.documentElement;
     root.classList.remove("light", "dark");
 
     if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      const systemTheme = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
       root.classList.add(systemTheme);
     } else {
       root.classList.add(theme);
