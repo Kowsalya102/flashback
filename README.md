@@ -12,7 +12,7 @@ Flashback is a production-ready web platform and interactive debugging assistant
 - **Styling**: Tailwind CSS + Framer Motion + Lucide React
 - **Backend API**: Next.js Serverless API Routes (`/api/chat`, `/api/auth/*`, `/api/memory/*`, `/api/conversations/*`)
 - **LLM Engine**: Groq API (`openai/gpt-oss-120b` or `llama-3.3-70b-versatile`)
-- **Vector Memory**: Hindsight Cloud API (`https://ui.hindsight.vectorize.io`)
+- **Vector Memory**: Hindsight Cloud API (`https://api.hindsight.vectorize.io`)
 - **Deployment**: Vercel Serverless Platform (Continuous 24/7 Deployment)
 
 ---
@@ -47,7 +47,7 @@ GROQ_API_KEY=your_groq_api_key_here
 
 # Hindsight Vector Memory API Credentials (by Vectorize)
 HINDSIGHT_API_KEY=your_hindsight_api_key_here
-HINDSIGHT_PROJECT_ID=your_hindsight_project_id_here
+HINDSIGHT_BANK_ID=flashback
 
 # Optional: Override Groq Model Name (defaults to openai/gpt-oss-120b)
 GROQ_MODEL=openai/gpt-oss-120b
