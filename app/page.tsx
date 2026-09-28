@@ -60,7 +60,7 @@ export default function HomePage() {
               </Link>
 
               <a
-                href="https://github.com/Kowshik-11/Flashback"
+                href="https://github.com/Kowsalya102/Flashback"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full sm:w-auto px-6 py-3.5 rounded-xl font-semibold text-sm text-gray-300 bg-surface/80 border border-surface-border hover:bg-surface-hover hover:text-white transition-all flex items-center justify-center gap-2"

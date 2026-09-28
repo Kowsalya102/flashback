@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { recallMemory } from "@/lib/hindsight";
 import { generateAnswer } from "@/lib/groq";
+import { FirmwareIncident } from "@/lib/incidents";
 
 // In-memory rate limiting map (IP -> count & reset timestamp)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -38,7 +39,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Step 1: Hindsight Recall (if memory enabled)
-    let recalledIncidents = [];
+    let recalledIncidents: FirmwareIncident[] = [];
     let memorySource = "disabled";
 
     if (withMemory) {
