@@ -93,7 +93,7 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <a
-                  href="https://github.com/Kowshik-11/Flashback"
+                  href="https://github.com/Kowsalya102/Flashback"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group flex items-center gap-2 text-gray-300 hover:text-white transition-colors"

@@ -102,7 +102,7 @@ export const Navbar: React.FC = () => {
           {/* Action CTAs / User Auth Menu */}
           <div className="hidden md:flex items-center gap-3">
             <a
-              href="https://github.com/Kowshik-11/Flashback"
+              href="https://github.com/Kowsalya102/Flashback"
               target="_blank"
               rel="noopener noreferrer"
               className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-surface-hover border border-transparent hover:border-surface-border transition-all"
