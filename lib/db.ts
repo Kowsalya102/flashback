@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import os from "os";
 import crypto from "crypto";
 
 export interface User {
@@ -64,10 +65,6 @@ export interface UsageLimit {
   lastResetDate: string;
 }
 
-// Data Directory Path
-const DATA_DIR = path.join(process.cwd(), ".data");
-const DB_FILE = path.join(DATA_DIR, "db.json");
-
 interface DBStructure {
   users: User[];
   conversations: Conversation[];
@@ -76,36 +73,109 @@ interface DBStructure {
   usageLimits: UsageLimit[];
 }
 
+// Data Directory & File Paths
+const SEED_DATA_DIR = path.join(process.cwd(), ".data");
+const SEED_DB_FILE = path.join(SEED_DATA_DIR, "db.json");
+
+/**
+ * Determines a writable file path for runtime database persistence.
+ * On Vercel / serverless (read-only /var/task), returns os.tmpdir() path.
+ * In local development, returns process.cwd()/.data/db.json.
+ */
+function getWritableDbPath(): string {
+  try {
+    if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+      return path.join(os.tmpdir(), "flashback-db.json");
+    }
+
+    if (!fs.existsSync(SEED_DATA_DIR)) {
+      fs.mkdirSync(SEED_DATA_DIR, { recursive: true });
+    }
+    const testFile = path.join(SEED_DATA_DIR, ".writable_test");
+    fs.writeFileSync(testFile, "test");
+    fs.unlinkSync(testFile);
+    return SEED_DB_FILE;
+  } catch {
+    return path.join(os.tmpdir(), "flashback-db.json");
+  }
+}
+
+/**
+ * Initializes and retrieves database structure with in-memory caching
+ * and seamless fallback across local files, Vercel /tmp, and seed defaults.
+ */
 function initDB(): DBStructure {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+  if ((globalThis as any)._flashback_db_cache) {
+    return (globalThis as any)._flashback_db_cache;
   }
 
-  if (!fs.existsSync(DB_FILE)) {
-    const defaultData: DBStructure = {
+  const dbPath = getWritableDbPath();
+  let dbData: DBStructure | null = null;
+
+  // 1. Try reading existing writable runtime database file
+  if (fs.existsSync(dbPath)) {
+    try {
+      const raw = fs.readFileSync(dbPath, "utf-8");
+      dbData = JSON.parse(raw);
+    } catch {
+      dbData = null;
+    }
+  }
+
+  // 2. Fallback to seed db.json if available
+  if (!dbData && fs.existsSync(SEED_DB_FILE)) {
+    try {
+      const rawSeed = fs.readFileSync(SEED_DB_FILE, "utf-8");
+      dbData = JSON.parse(rawSeed);
+    } catch {
+      dbData = null;
+    }
+  }
+
+  // 3. Default empty database structure
+  if (!dbData) {
+    dbData = {
       users: [],
       conversations: [],
       messages: [],
       memoryEvents: [],
       usageLimits: [],
     };
-    fs.writeFileSync(DB_FILE, JSON.stringify(defaultData, null, 2));
-    return defaultData;
   }
 
-  try {
-    const raw = fs.readFileSync(DB_FILE, "utf-8");
-    return JSON.parse(raw);
-  } catch {
-    return { users: [], conversations: [], messages: [], memoryEvents: [], usageLimits: [] };
-  }
+  dbData.users = dbData.users || [];
+  dbData.conversations = dbData.conversations || [];
+  dbData.messages = dbData.messages || [];
+  dbData.memoryEvents = dbData.memoryEvents || [];
+  dbData.usageLimits = dbData.usageLimits || [];
+
+  (globalThis as any)._flashback_db_cache = dbData;
+  return dbData;
 }
 
+/**
+ * Persists database structure to in-memory cache and writable file storage.
+ * Prevents EROFS read-only filesystem errors on Vercel deployment.
+ */
 function saveDB(db: DBStructure) {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+  (globalThis as any)._flashback_db_cache = db;
+
+  const dbPath = getWritableDbPath();
+  try {
+    const parentDir = path.dirname(dbPath);
+    if (!fs.existsSync(parentDir)) {
+      fs.mkdirSync(parentDir, { recursive: true });
+    }
+    fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
+  } catch (err) {
+    console.warn("Primary saveDB write failed, falling back to emergency /tmp storage:", err);
+    try {
+      const emergencyPath = path.join(os.tmpdir(), "flashback-db.json");
+      fs.writeFileSync(emergencyPath, JSON.stringify(db, null, 2));
+    } catch (fallbackErr) {
+      console.error("Failed emergency database write to /tmp:", fallbackErr);
+    }
   }
-  fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
 }
 
 // --- USER OPERATIONS ---
@@ -242,7 +312,6 @@ export function addMessage(
   };
   db.messages.push(newMsg);
 
-  // Touch conversation timestamp
   const convIdx = db.conversations.findIndex((c) => c.id === conversationId);
   if (convIdx !== -1) {
     db.conversations[convIdx].updatedAt = new Date().toISOString();
