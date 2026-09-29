@@ -3,6 +3,7 @@
 > **"The debugging assistant that never forgets a fix."**
 
 Flashback is a production-ready web platform and interactive debugging assistant that gives engineering teams persistent memory across **Hardware**, **Embedded/Firmware**, and **Software** debugging incidents. Powered by **Hindsight** (Vector Memory API by Vectorize) and **Groq**, Flashback eliminates duplicate debugging cycles by retrieving team incident records, register configurations, board revision notes, and stack trace solutions.
+🌐 **Live Demo:** https://flashback-mu.vercel.app/
 
 ---
 
